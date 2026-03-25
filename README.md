@@ -18,31 +18,111 @@
 
 ```text
 repo/
-├── AGENTS.md              # Agent 总入口（必读）
+├── AGENTS.md              # Agent 总入口（必读，项目本地维护）
 ├── ARCHITECTURE.md        # 架构速查
 ├── DESIGN.md              # 设计原则速查
 ├── PRODUCT_SENSE.md       # 产品直觉速查
 ├── QUALITY_SCORE.md       # 质量评分
 ├── RELIABILITY.md         # 可靠性要求速查
 ├── SECURITY.md            # 安全要求速查
+├── CHANGELOG.md           # 版本化发布说明
+│
+├── base/                  # 共享内容权威来源（同步脚本的 source）
+│   ├── skills/            # Agent 行为手册结构说明
+│   ├── templates/         # 模板结构说明
+│   └── docs/
+│       ├── standards/     # 开发规范结构说明
+│       └── references/    # 外部参考结构说明
+│
+├── overlays/              # 项目类型专用追加内容
+│   ├── python-project/    # Python 项目 overlay
+│   └── node-project/      # Node.js 项目 overlay
+│
+├── examples/              # 示例项目结构
+│   └── simple-project/    # 最简单的单语言项目示例
+│
+├── manifest/
+│   └── template-manifest.json  # 同步清单（定义 group/source/target/mode）
 │
 ├── docs/                  # 结构化知识源
 │   ├── architecture/      # 架构文档
 │   ├── design-docs/       # 设计文档
 │   ├── product-specs/     # 产品规格
-│   ├── standards/         # 开发规范
+│   ├── standards/         # 开发规范（与 base/docs/standards/ 保持同步）
 │   ├── runbooks/          # 运行手册
 │   ├── exec-plans/        # 执行计划
 │   ├── generated/         # 自动生成文档
-│   └── references/        # 外部参考
+│   └── references/        # 外部参考（与 base/docs/references/ 保持同步）
 │
-├── skills/                # Agent 行为手册
-├── templates/             # 可复用执行表单
+├── skills/                # Agent 行为手册（与 base/skills/ 保持同步）
+├── templates/             # 可复用执行表单（与 base/templates/ 保持同步）
 ├── .github/               # GitHub 模板与 CI
-└── tools/                 # 脚本与 lint 工具
+└── tools/
+    ├── agent-template/    # 模板同步工具
+    │   ├── sync-template.sh          # 主同步脚本
+    │   ├── sync-template.config.json # 本地配置示例
+    │   └── template-version.json     # 同步版本追踪
+    └── ...                # 其他脚本与 lint 工具
 ```
 
-## 连接逻辑
+## 多项目复用架构（base / overlays / examples）
+
+### 为什么引入这套结构？
+
+随着越来越多的项目需要复用同一套 Agent 工作规范，手动复制文件的方式会导致：
+- 规范内容在各项目中逐渐漂移，失去一致性
+- 模板更新后，下游项目难以追踪变更和选择性采纳
+- 无法区分哪些内容是"所有项目共享"，哪些是"项目类型专属"，哪些是"项目私有"
+
+`base/overlays/examples` 三层结构解决这个问题：
+
+| 层级 | 路径 | 用途 |
+|------|------|------|
+| **base** | `base/` | 所有项目可共享的共性内容（skills、templates、standards 等） |
+| **overlay** | `overlays/<type>/` | 特定项目类型的可选追加内容（Python 专属规范、Node.js 专属规范等） |
+| **examples** | `examples/` | 示例项目结构，说明同步后推荐的目录布局 |
+
+### manifest / sync script / project config 如何协作
+
+```text
+manifest/template-manifest.json          ← 模板仓库维护
+  定义：group 名称、源路径、目标路径、同步模式（hard/soft）
+
+tools/agent-template/sync-template.config.json  ← 下游项目本地维护
+  Phase 1：仅配置模板仓库来源（templateRepo / templateRepoUrl 等）
+  规划能力（尚未在 sync-template.sh 中实现）：选择哪些 overlay、是否禁用某个 group
+
+tools/agent-template/sync-template.sh    ← 执行层
+  Phase 1：读取 manifest + config 中的模板仓库信息 → 克隆模板 @ ref → 通过 CLI 参数（如 --group）手动选择 overlay / group 并同步文件到项目
+
+tools/agent-template/template-version.json  ← 自动维护
+  记录：已同步的 ref、提交 SHA、时间戳
+```
+
+### 哪些内容适合强同步、弱同步、项目私有维护？
+
+| 内容 | 同步模式 | 理由 |
+|------|---------|------|
+| `skills/` | **强同步（hard-sync）** | Agent 行为规范需要跨项目保持一致 |
+| `templates/` | **强同步（hard-sync）** | 模板格式需要统一，避免每个项目各搞一套 |
+| `docs/standards/` | **弱同步（soft-sync）** | 基础规范共享，但允许项目追加语言或框架特有规范 |
+| `docs/references/` | **弱同步（soft-sync）** | 允许项目追加私有参考文档（框架版本等） |
+| `AGENTS.md` | **项目私有** | 各项目 Agent 入口需要结合项目实际定制 |
+| `ARCHITECTURE.md` | **项目私有** | 架构决策由项目本地维护 |
+| `docs/architecture/` | **项目私有** | 完全由项目维护 |
+| `docs/exec-plans/` | **项目私有** | 执行计划是项目内部文档 |
+
+### 关于 AGENTS.md 的变更方式
+
+**本模板仓库不会自动同步 `AGENTS.md` 到下游项目。**
+
+- 初始化时，下游项目可以参考本仓库根目录的 `AGENTS.md` 作为起点。
+- 之后，`AGENTS.md` 由各项目自行维护，体现项目的工作规则。
+- 当模板仓库的 `AGENTS.md` 有重要更新时，将通过单独 PR 提出 diff，由各项目决定是否采纳。
+
+这样做的好处是：**不同项目可以在遵守共性规范的同时，保留自己的 Agent 工作规则定制空间。**
+
+
 
 ```text
 AGENTS.md（总入口）
@@ -64,14 +144,17 @@ quality / cleanup（长期治理）
 
 ## 快速开始
 
-1. 将本仓库结构复制到你的项目
+### 单项目直接使用
+
+1. 将本仓库结构复制到你的项目（或使用 GitHub "Use this template"）
 2. 先阅读 `AGENTS.md`
 3. 阅读 `skills/delivery-quality-first.md`，明确交付质量优先原则
-4. 用 `templates/task-template.md` 定义第一个任务
-5. 按 `skills/plan-before-code.md` 制定计划
+4. 用 `templates/plan-template.md` 制定执行计划
+5. 按 `skills/plan-before-code.md` 的流程推进
 6. 参考 `docs/` 中的相关文档实现
 7. 用 `templates/pr-template.md` 提交证据
 
+<<<<<<< copilot/add-skill-upstream-pr-template
 ## 多项目复用与回流
 
 本模板支持多项目复用。下游项目可通过同步脚本（`tools/agent-template/sync-template.sh`）从本仓库拉取最新共性 Skills 和 Templates。
@@ -85,6 +168,20 @@ quality / cleanup（长期治理）
 5. 向本仓库发起 Pull Request，等待维护者评审
 
 **注意：回流是受控的人工流程，不是自动反向同步。**
+=======
+### 多项目复用（推荐）
+
+如果你有多个项目都需要复用这套模板：
+
+1. 将本仓库作为模板仓库，各下游项目使用 `tools/agent-template/sync-template.sh` 同步
+2. 参考 `examples/simple-project/README.md` 了解同步后的目录结构
+3. 参考 `manifest/template-manifest.json` 了解哪些内容可同步
+4. 将 `tools/agent-template/` 复制到目标项目并配置 `sync-template.config.json`
+5. 运行 `./tools/agent-template/sync-template.sh --dry-run` 预览
+6. 运行 `./tools/agent-template/sync-template.sh` 执行同步
+
+详见 `tools/agent-template/README.md`。
+>>>>>>> main
 
 ## 模式使用要求
 

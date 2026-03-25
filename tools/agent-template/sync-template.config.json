@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "_comment": "本文件是下游项目的本地配置，用于定制同步行为。请勿提交敏感信息。",
+  "templateRepo": "Zoneee/agent-best-practies-template",
+  "templateRepoUrl": "https://github.com/Zoneee/agent-best-practies-template.git",
+  "overlays": [],
+  "groupOverrides": {
+    "_comment": "在此可覆盖特定 group 的 enabled 状态或目标路径。注意：以 _ 开头的键（如 _comment、_example）为元数据，sync-template.sh 会自动跳过，不作为真实 override 处理。",
+    "_example": {
+      "docs-references": {
+        "enabled": false
+      }
+    }
+  },
+  "projectName": "your-project-name",
+  "notes": "将此文件复制到 tools/agent-template/sync-template.config.json 并修改 projectName 和其他配置"
+}
