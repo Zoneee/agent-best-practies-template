@@ -2,12 +2,21 @@
 
 Node.js 项目类型的追加内容。
 
-## 包含的内容
+> **本 README 不会被同步到下游项目。** 同步时会自动排除（见 manifest `exclude` 字段）。
 
-本 overlay 为 Node.js 项目提供以下追加文件：
+## 目录结构
 
-- `skills/node-conventions.md`（示例，待补充）：Node.js 编码约定与包管理规范
-- `docs/standards/node-testing.md`（示例，待补充）：Jest 与 TypeScript 测试规范
+```text
+overlays/node-project/
+├── README.md               ← 本文件（overlay 说明，不同步）
+├── skills/
+│   └── node-conventions.md     ← 同步到项目的 skills/
+└── docs/
+    └── standards/
+        └── node-testing.md     ← 同步到项目的 docs/standards/
+```
+
+内容组织方式：**以下游项目根目录为基准的相对路径**。目录中的文件通过 `soft-sync` 模式追加到项目中，不会删除项目已有文件。
 
 ## 适用范围
 
@@ -17,14 +26,22 @@ Node.js 项目类型的追加内容。
 
 ## 启用方式
 
-在 `tools/agent-template/sync-template.config.json` 中：
+在 `tools/agent-template/sync-template.config.json` 中指定：
 
 ```json
 {
-  "overlays": ["node-project"]
+  "overlays": ["overlay-node"]
 }
 ```
 
-## 状态
+然后运行同步脚本：
 
-📋 **待填充**：当前为占位结构，实际 overlay 内容将在后续 PR 中按项目需求补充。
+```bash
+./tools/agent-template/sync-template.sh
+```
+
+或手动指定 group：
+
+```bash
+./tools/agent-template/sync-template.sh --group overlay-node
+```

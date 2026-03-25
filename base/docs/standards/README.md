@@ -1,12 +1,14 @@
 # base/docs/standards/
 
-本目录镜像 `docs/standards/` 的内容，作为同步脚本的 **源路径（source）**。
+本目录是开发规范文档的 **权威来源（source of truth）**，作为同步脚本的源路径。
 
-下游项目同步后，`docs/standards/` 会出现在项目内，供开发规范查阅。
+下游项目同步后，这些文件会出现在项目的 `docs/standards/` 下，供开发规范查阅。
 
 ## 当前状态
 
-Phase 1 阶段，`base/docs/standards/` 与根目录 `docs/standards/` 保持内容一致，以 `manifest/template-manifest.json` 中的 `source` 路径为准。
+**已完成内容迁移。** `base/docs/standards/` 包含全部规范文件，`manifest/template-manifest.json` 中的 `source` 路径指向此目录（`base/docs/standards/`）。
+
+根目录 `docs/standards/` 保持原有路径有效，以确保向后兼容。
 
 ## 包含的规范
 

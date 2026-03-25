@@ -13,13 +13,14 @@
 #                          若不存在则使用远程仓库 main 分支的最新版本
 #   --group <name>         仅同步指定 group（可多次指定）
 #                          若不指定，同步 manifest 中 enabled=true 的所有 group
+#                          以及 config 中 overlays 列表启用的 overlay group
 #   --config <path>        指定本地配置文件路径
 #                          默认：tools/agent-template/sync-template.config.json
 #   --manifest <path>      指定 manifest 文件路径（优先于模板仓库中的 manifest）
 #   --template-dir <path>  使用本地目录作为模板源（跳过远程克隆，用于测试）
 #   --help                 显示帮助信息
 #
-# 依赖：git, rsync（若未安装 rsync 则回退到 cp）
+# 依赖：git, rsync（若未安装 rsync 则回退到 cp；cp 模式下 exclude 不生效）
 
 set -euo pipefail
 
@@ -66,16 +67,20 @@ require_cmd() {
 
 require_cmd git
 
+# 若用户显式指定 --manifest，立即校验文件存在性，不等到后续流程才报错
+if [[ -n "$MANIFEST_OVERRIDE" ]] && [[ ! -f "$MANIFEST_OVERRIDE" ]]; then
+  err "--manifest 指定的文件不存在: ${MANIFEST_OVERRIDE}"
+fi
+
 # ── 读取本地配置 ──────────────────────────────────────────────────────────────
 TEMPLATE_REPO="Zoneee/agent-best-practies-template"
 TEMPLATE_REPO_URL=""
 
 if [[ -f "$CONFIG_FILE" ]]; then
   info "读取本地配置: $CONFIG_FILE"
-  # 从 config 中读取 templateRepo（若存在）
   if command -v python3 >/dev/null 2>&1; then
     _repo=$(python3 -c "
-import json, sys
+import json
 with open('${CONFIG_FILE}') as f:
   d = json.load(f)
 print(d.get('templateRepo', ''))
@@ -83,7 +88,7 @@ print(d.get('templateRepo', ''))
     [[ -n "$_repo" ]] && TEMPLATE_REPO="$_repo"
 
     _url=$(python3 -c "
-import json, sys
+import json
 with open('${CONFIG_FILE}') as f:
   d = json.load(f)
 print(d.get('templateRepoUrl', ''))
@@ -122,39 +127,27 @@ trap cleanup EXIT
 
 # ── 拉取模板仓库 ──────────────────────────────────────────────────────────────
 if [[ -n "$TEMPLATE_DIR_OVERRIDE" ]]; then
-  # 使用本地目录作为模板源（跳过远程克隆）
   TEMPLATE_DIR="$TEMPLATE_DIR_OVERRIDE"
   info "使用本地模板目录: ${TEMPLATE_DIR}"
 else
-  # 通过 git 拉取模板仓库
   REPO_URL="${TEMPLATE_REPO_URL:-https://github.com/${TEMPLATE_REPO}.git}"
   info "克隆模板仓库: ${REPO_URL} @ ${REF}"
 
   if $DRY_RUN; then
-    if [[ -z "$REF" ]]; then
-      log "[DRY-RUN] git clone --depth 1 ${REPO_URL} ${TEMPLATE_DIR}"
-    else
-      log "[DRY-RUN] git clone ${REPO_URL} ${TEMPLATE_DIR}"
-      log "[DRY-RUN] git -C ${TEMPLATE_DIR} checkout ${REF}"
-    fi
+    log "[DRY-RUN] git clone ${REPO_URL} ${TEMPLATE_DIR} && git checkout ${REF}"
   else
-    if [[ -z "$REF" ]]; then
-      git clone --depth 1 "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
-        | sed 's/^/  /' \
-        || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
-    else
-      git clone "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
-        | sed 's/^/  /' \
-        || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
-      git -C "${TEMPLATE_DIR}" checkout "${REF}" 2>&1 \
-        | sed 's/^/  /' \
-        || err "切换到指定 ref 失败，请检查 ref 是否正确: ${REF}"
-    fi
+    git clone "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
+      | sed 's/^/  /' \
+      || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
+    git -C "${TEMPLATE_DIR}" checkout "${REF}" 2>&1 \
+      | sed 's/^/  /' \
+      || err "切换到指定 ref 失败，请检查 ref 是否正确: ${REF}"
   fi
 fi
 
 # ── 读取 manifest ─────────────────────────────────────────────────────────────
-if [[ -n "$MANIFEST_OVERRIDE" ]] && [[ -f "$MANIFEST_OVERRIDE" ]]; then
+if [[ -n "$MANIFEST_OVERRIDE" ]]; then
+  # 文件存在性已在参数解析阶段校验
   MANIFEST_FILE="$MANIFEST_OVERRIDE"
 elif [[ -d "$TEMPLATE_DIR" ]]; then
   MANIFEST_FILE="${TEMPLATE_DIR}/manifest/template-manifest.json"
@@ -163,7 +156,7 @@ else
 fi
 
 [[ -z "$MANIFEST_FILE" ]] || [[ ! -f "$MANIFEST_FILE" ]] && \
-  err "未找到 manifest 文件: ${MANIFEST_FILE}"
+  err "未找到 manifest 文件: ${MANIFEST_FILE:-（未指定）}"
 
 info "读取 manifest: ${MANIFEST_FILE}"
 
@@ -172,15 +165,29 @@ if ! command -v python3 >/dev/null 2>&1; then
   err "需要 python3 来解析 manifest JSON"
 fi
 
-# 构建要同步的 group 列表
+# 构建命令行指定的 group 过滤列表
 GROUP_FILTER=""
 if [[ ${#SYNC_GROUPS[@]} -gt 0 ]]; then
   GROUP_FILTER=$(printf '%s\n' "${SYNC_GROUPS[@]}")
 fi
 
-# 用 Python 解析 manifest 并输出同步任务列表
+# 用 Python 综合 manifest + config，输出同步任务列表
+# 格式：group_name|source|target|mode|exclude_csv
 SYNC_TASKS=$(python3 - <<PYEOF
-import json, sys
+import json, os, sys
+
+# 读取本地配置中的 overlays 和 groupOverrides
+config_overlays = []
+config_group_overrides = {}
+config_file = '${CONFIG_FILE}'
+if os.path.exists(config_file):
+    with open(config_file) as f:
+        cfg = json.load(f)
+    config_overlays = cfg.get('overlays', [])
+    raw_overrides = cfg.get('groupOverrides', {})
+    # 过滤掉以 _ 开头的元数据键（注释/示例）
+    config_group_overrides = {k: v for k, v in raw_overrides.items()
+                               if not k.startswith('_')}
 
 with open('${MANIFEST_FILE}') as f:
     manifest = json.load(f)
@@ -190,11 +197,23 @@ filter_groups = """${GROUP_FILTER}""".strip().split('\n') if """${GROUP_FILTER}"
 all_groups = manifest.get('groups', []) + manifest.get('overlayGroups', [])
 
 for g in all_groups:
-    name = g.get('name', '')
+    name    = g.get('name', '')
     enabled = g.get('enabled', False)
-    source = g.get('source', '')
-    target = g.get('target', '')
-    mode = g.get('mode', 'soft-sync')
+    source  = g.get('source', '')
+    target  = g.get('target', '')
+    mode    = g.get('mode', 'soft-sync')
+    exclude = list(g.get('exclude', []))
+
+    # 应用 config 中的 groupOverrides
+    if name in config_group_overrides:
+        ov = config_group_overrides[name]
+        enabled = ov.get('enabled', enabled)
+        target  = ov.get('target', target)
+        mode    = ov.get('mode', mode)
+
+    # config 中 overlays 列表可直接启用对应 overlay group
+    if name in config_overlays:
+        enabled = True
 
     if filter_groups:
         if name not in filter_groups:
@@ -203,19 +222,23 @@ for g in all_groups:
         if not enabled:
             continue
 
-    print(f"{name}|{source}|{target}|{mode}")
+    exclude_csv = ','.join(exclude)
+    print(f"{name}|{source}|{target}|{mode}|{exclude_csv}")
 PYEOF
 )
 
 if [[ -z "$SYNC_TASKS" ]]; then
-  warn "没有需要同步的 group（检查 manifest 中 enabled=true 的 group，或 --group 指定的 group 是否存在）"
+  warn "没有需要同步的 group"
+  warn "提示：检查 manifest 中 enabled=true 的 group；"
+  warn "      或在 config 的 overlays 中列出要启用的 overlay；"
+  warn "      或通过 --group 命令行参数手动指定。"
   exit 0
 fi
 
 SYNC_COUNT=0
 SKIP_COUNT=0
 
-while IFS='|' read -r group_name source_rel target_rel mode; do
+while IFS='|' read -r group_name source_rel target_rel mode exclude_csv; do
   [[ -z "$group_name" ]] && continue
 
   SOURCE_PATH="${TEMPLATE_DIR}/${source_rel}"
@@ -229,22 +252,36 @@ while IFS='|' read -r group_name source_rel target_rel mode; do
 
   log "同步 group '${group_name}' [${mode}]: ${source_rel} → ${target_rel}"
 
+  # 构建 rsync exclude 参数
+  RSYNC_EXCLUDES=()
+  if [[ -n "$exclude_csv" ]]; then
+    IFS=',' read -ra _excl_arr <<< "$exclude_csv"
+    for _excl in "${_excl_arr[@]}"; do
+      RSYNC_EXCLUDES+=("--exclude=${_excl}")
+    done
+  fi
+
   if $DRY_RUN; then
     if command -v rsync >/dev/null 2>&1; then
-      rsync -av --dry-run "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | grep -Ev '^(sending|sent|total)' | sed 's/^/  [DRY-RUN] /' || true
+      rsync -av --dry-run "${RSYNC_EXCLUDES[@]+"${RSYNC_EXCLUDES[@]}"}" \
+        "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 \
+        | grep -Ev '^(sending|sent|total)' \
+        | sed 's/^/  [DRY-RUN] /' || true
     else
-      log "[DRY-RUN] cp -r ${SOURCE_PATH}/ → ${TARGET_PATH}/"
+      log "[DRY-RUN] cp -r ${SOURCE_PATH}/ → ${TARGET_PATH}/ (exclude: ${exclude_csv:-none})"
     fi
   else
     mkdir -p "$TARGET_PATH"
     if command -v rsync >/dev/null 2>&1; then
       if [[ "$mode" == "hard-sync" ]]; then
-        rsync -av --delete "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | sed 's/^/  /'
+        rsync -av --delete "${RSYNC_EXCLUDES[@]+"${RSYNC_EXCLUDES[@]}"}" \
+          "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | sed 's/^/  /'
       else
-        # soft-sync: 不删除目标中多余的文件
-        rsync -av "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | sed 's/^/  /'
+        rsync -av "${RSYNC_EXCLUDES[@]+"${RSYNC_EXCLUDES[@]}"}" \
+          "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | sed 's/^/  /'
       fi
     else
+      warn "rsync 未安装，回退到 cp（exclude 模式不生效）"
       cp -r "${SOURCE_PATH}/." "${TARGET_PATH}/"
     fi
   fi

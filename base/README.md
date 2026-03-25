@@ -6,12 +6,18 @@
 
 ```text
 base/
-├── skills/          # Agent 行为手册（共享）
-├── templates/       # 可复用执行表单（共享）
+├── skills/          # Agent 行为手册（共享，权威来源）
+├── templates/       # 可复用执行表单（共享，权威来源）
 └── docs/
-    ├── standards/   # 开发规范（共享）
-    └── references/  # 外部参考文档（共享）
+    ├── standards/   # 开发规范（共享，权威来源）
+    └── references/  # 外部参考文档结构说明
 ```
+
+## 当前状态
+
+**已完成内容迁移。** `base/` 目录下包含完整的共享内容，`manifest/template-manifest.json` 中的 `source` 路径指向 `base/` 各子目录。
+
+根目录下的 `skills/`、`templates/`、`docs/standards/`、`docs/references/` 保持原有路径有效（向后兼容）。如果你只用单仓库方式使用本模板，这些路径不受影响。
 
 ## 设计原则
 
@@ -28,12 +34,7 @@ base/
 | `docs/standards/` | 弱同步（soft-sync）| 允许项目在本地扩展 |
 | `docs/references/` | 弱同步（soft-sync）| 允许项目添加私有参考文档 |
 
-## 向后兼容说明
+## 关于 AGENTS.md
 
-当前阶段（Phase 1），根目录下的 `skills/`、`templates/`、`docs/standards/`、`docs/references/` 与 `base/` 中的内容保持同步，两条路径均有效。
-
-**迁移计划：**
-- Phase 2：将根目录下的共享内容移动至 `base/`，通过同步脚本分发到下游项目
-- Phase 3：根目录仅保留模板仓库本身使用的入口文件（`AGENTS.md`、`README.md` 等）
-
-`AGENTS.md` 的路径调整将通过单独 PR 提出 diff，由人工决定是否采用。
+`AGENTS.md` 属于项目私有内容，**不由 `base/` 管理**。  
+`AGENTS.md` 的改动将通过单独 PR 提出 diff，由各项目决定是否采纳。

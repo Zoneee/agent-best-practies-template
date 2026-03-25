@@ -7,52 +7,58 @@
     {
       "name": "core-skills",
       "description": "Agent 行为手册（核心 Skills），强同步，不应被下游项目覆盖",
-      "source": "skills/",
+      "source": "base/skills/",
       "target": "skills/",
       "mode": "hard-sync",
-      "enabled": true
+      "enabled": true,
+      "exclude": ["README.md"]
     },
     {
       "name": "templates",
       "description": "可复用执行表单（Templates），强同步，不应被下游项目覆盖",
-      "source": "templates/",
+      "source": "base/templates/",
       "target": "templates/",
       "mode": "hard-sync",
-      "enabled": true
+      "enabled": true,
+      "exclude": ["README.md"]
     },
     {
       "name": "docs-standards",
       "description": "开发规范文档，弱同步，允许下游项目追加但同名文件会被覆盖",
-      "source": "docs/standards/",
+      "source": "base/docs/standards/",
       "target": "docs/standards/",
       "mode": "soft-sync",
-      "enabled": true
+      "enabled": true,
+      "exclude": ["README.md"]
     },
     {
       "name": "docs-references",
       "description": "外部参考文档，弱同步，允许下游项目追加私有参考文档",
-      "source": "docs/references/",
+      "source": "base/docs/references/",
       "target": "docs/references/",
       "mode": "soft-sync",
-      "enabled": true
+      "enabled": true,
+      "exclude": ["README.md", "REFERENCES-STRUCTURE.md"]
     }
   ],
   "overlayGroups": [
     {
       "name": "overlay-python",
-      "description": "Python 项目专用追加内容",
+      "description": "Python 项目专用追加内容，以项目根目录为基准的相对路径组织",
       "source": "overlays/python-project/",
       "target": ".",
       "mode": "soft-sync",
-      "enabled": false
+      "enabled": false,
+      "exclude": ["README.md"]
     },
     {
       "name": "overlay-node",
-      "description": "Node.js 项目专用追加内容",
+      "description": "Node.js 项目专用追加内容，以项目根目录为基准的相对路径组织",
       "source": "overlays/node-project/",
       "target": ".",
       "mode": "soft-sync",
-      "enabled": false
+      "enabled": false,
+      "exclude": ["README.md"]
     }
   ],
   "projectPrivate": {

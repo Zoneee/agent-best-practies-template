@@ -1,18 +1,17 @@
 # base/skills/
 
-本目录用于承载基础 Skills 内容，作为同步脚本的 **源路径（source）**。
+本目录是 Agent 行为手册（Skills）的 **权威来源（source of truth）**，作为同步脚本的源路径。
 
-下游项目同步后，`skills/` 会出现在项目根目录下，供 Agent 直接读取。
+下游项目通过 `tools/agent-template/sync-template.sh` 同步后，这些文件会出现在项目根目录的 `skills/` 下，供 Agent 直接读取。
 
 ## 当前状态
 
-**Phase 1：占位结构与说明。** 当前 `base/skills/` 仅包含本 README，用于约定目录用途和未来结构。
+**已完成内容迁移。** `base/skills/` 包含全部 Skills 文件，`manifest/template-manifest.json` 中的 `source` 路径指向此目录（`base/skills/`）。
 
-**Phase 2：迁移内容并作为 source。** 后续会将根目录 `skills/` 中的实际文件迁移/复制到 `base/skills/`，届时以 `manifest/template-manifest.json` 中的 `source` 路径为准，实现“镜像 `skills/` 的内容 / 保持内容一致”。
+根目录 `skills/` 保持原有路径有效，以确保向后兼容。
 
-## 计划包含的 Skills
+## 包含的 Skills
 
-下表是本目录在 Phase 2 之后**计划**承载的基础 Skills 文件清单，当前仓库中这些文件可能仅存在于根目录 `skills/`（或尚未创建），而不会自动出现在 `base/skills/`：
 | 文件 | 用途 |
 |------|------|
 | `delivery-quality-first.md` | 交付质量优先（所有模式默认起点） |
@@ -33,4 +32,4 @@
 
 ## 同步模式
 
-**强同步（hard-sync）**：下游项目不应覆盖这些文件。若需要项目级定制，应通过 `overlays/` 中的追加文件实现，而不是修改同步来的基础内容。
+**强同步（hard-sync）**：下游项目不应覆盖这些文件。若需要项目级定制，应通过 `overlays/` 中的追加文件实现。
