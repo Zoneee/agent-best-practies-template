@@ -89,10 +89,11 @@ manifest/template-manifest.json          ← 模板仓库维护
   定义：group 名称、源路径、目标路径、同步模式（hard/soft）
 
 tools/agent-template/sync-template.config.json  ← 下游项目本地维护
-  定义：选择哪些 overlay、是否禁用某个 group
+  Phase 1：仅配置模板仓库来源（templateRepo / templateRepoUrl 等）
+  规划能力（尚未在 sync-template.sh 中实现）：选择哪些 overlay、是否禁用某个 group
 
 tools/agent-template/sync-template.sh    ← 执行层
-  读取 manifest + config → 克隆模板 @ ref → 同步文件到项目
+  Phase 1：读取 manifest + config 中的模板仓库信息 → 克隆模板 @ ref → 通过 CLI 参数（如 --group）手动选择 overlay / group 并同步文件到项目
 
 tools/agent-template/template-version.json  ← 自动维护
   记录：已同步的 ref、提交 SHA、时间戳

@@ -131,11 +131,25 @@ else
   info "克隆模板仓库: ${REPO_URL} @ ${REF}"
 
   if $DRY_RUN; then
-    log "[DRY-RUN] git clone --depth 1 --branch ${REF} ${REPO_URL} ${TEMPLATE_DIR}"
+    if [[ -z "$REF" ]]; then
+      log "[DRY-RUN] git clone --depth 1 ${REPO_URL} ${TEMPLATE_DIR}"
+    else
+      log "[DRY-RUN] git clone ${REPO_URL} ${TEMPLATE_DIR}"
+      log "[DRY-RUN] git -C ${TEMPLATE_DIR} checkout ${REF}"
+    fi
   else
-    git clone --depth 1 --branch "${REF}" "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
-      | sed 's/^/  /' \
-      || err "克隆模板仓库失败，请检查网络连接和 ref 是否正确: ${REF}"
+    if [[ -z "$REF" ]]; then
+      git clone --depth 1 "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
+        | sed 's/^/  /' \
+        || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
+    else
+      git clone "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
+        | sed 's/^/  /' \
+        || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
+      git -C "${TEMPLATE_DIR}" checkout "${REF}" 2>&1 \
+        | sed 's/^/  /' \
+        || err "切换到指定 ref 失败，请检查 ref 是否正确: ${REF}"
+    fi
   fi
 fi
 
@@ -217,7 +231,7 @@ while IFS='|' read -r group_name source_rel target_rel mode; do
 
   if $DRY_RUN; then
     if command -v rsync >/dev/null 2>&1; then
-      rsync -av --dry-run "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | grep -v "^sending\|^sent\|^total" | sed 's/^/  [DRY-RUN] /' || true
+      rsync -av --dry-run "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | grep -Ev '^(sending|sent|total)' | sed 's/^/  [DRY-RUN] /' || true
     else
       log "[DRY-RUN] cp -r ${SOURCE_PATH}/ → ${TARGET_PATH}/"
     fi
@@ -225,10 +239,10 @@ while IFS='|' read -r group_name source_rel target_rel mode; do
     mkdir -p "$TARGET_PATH"
     if command -v rsync >/dev/null 2>&1; then
       if [[ "$mode" == "hard-sync" ]]; then
-        rsync -av --delete "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | sed 's/^/  /' || true
+        rsync -av --delete "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | sed 's/^/  /'
       else
         # soft-sync: 不删除目标中多余的文件
-        rsync -av "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | sed 's/^/  /' || true
+        rsync -av "${SOURCE_PATH}/" "${TARGET_PATH}/" 2>&1 | sed 's/^/  /'
       fi
     else
       cp -r "${SOURCE_PATH}/." "${TARGET_PATH}/"
