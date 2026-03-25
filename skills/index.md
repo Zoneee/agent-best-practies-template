@@ -1,6 +1,7 @@
 # Skills 索引
 
 ## 核心 Skills
+- delivery-quality-first.md：交付质量优先（所有模式的默认起点）
 - plan-before-code.md：先计划，后编码
 - repo-as-source-of-truth.md：仓库即唯一事实来源
 - small-safe-prs.md：小而安全的 PR
@@ -23,9 +24,12 @@
 
 ## 使用时机
 
-**编码前：**
-- plan-before-code
+**所有模式的起点（Plan / Agent / Ask）：**
+- delivery-quality-first
 - repo-as-source-of-truth
+
+**编码前 / 计划前：**
+- plan-before-code
 - codebase-navigation
 
 **编码中：**
