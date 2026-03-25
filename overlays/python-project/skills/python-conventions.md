@@ -8,7 +8,7 @@
 
 ## 编码约定
 
-- 遵循 [PEP 8](https://pep8.org/) 代码风格
+- 遵循 [PEP 8](https://peps.python.org/pep-0008/) 代码风格
 - 类型提示：所有公共函数必须有类型注解（Python 3.9+）
 - docstring：使用 Google 风格 docstring
 

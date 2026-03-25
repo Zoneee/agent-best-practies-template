@@ -5,7 +5,7 @@
   "templateRepoUrl": "https://github.com/Zoneee/agent-best-practies-template.git",
   "overlays": [],
   "groupOverrides": {
-    "_comment": "在此可覆盖特定 group 的 enabled 状态或目标路径",
+    "_comment": "在此可覆盖特定 group 的 enabled 状态或目标路径。注意：以 _ 开头的键（如 _comment、_example）为元数据，sync-template.sh 会自动跳过，不作为真实 override 处理。",
     "_example": {
       "docs-references": {
         "enabled": false

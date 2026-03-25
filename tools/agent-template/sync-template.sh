@@ -252,12 +252,16 @@ while IFS='|' read -r group_name source_rel target_rel mode exclude_csv; do
 
   log "同步 group '${group_name}' [${mode}]: ${source_rel} → ${target_rel}"
 
-  # 构建 rsync exclude 参数
+  # 构建 rsync exclude 参数（仅允许安全字符，防止意外 rsync 行为）
   RSYNC_EXCLUDES=()
   if [[ -n "$exclude_csv" ]]; then
     IFS=',' read -ra _excl_arr <<< "$exclude_csv"
     for _excl in "${_excl_arr[@]}"; do
-      RSYNC_EXCLUDES+=("--exclude=${_excl}")
+      if [[ "$_excl" =~ ^[a-zA-Z0-9._/:*-]+$ ]]; then
+        RSYNC_EXCLUDES+=("--exclude=${_excl}")
+      else
+        warn "跳过非法 exclude 模式（只允许字母/数字/. - _ / : *）: '${_excl}'"
+      fi
     done
   fi
 
