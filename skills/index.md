@@ -22,6 +22,9 @@
 ## 维护类 Skills
 - entropy-cleanup.md：熵值清理
 
+## 模板协作类 Skills
+- skill-upstream-pr.md：受控回流 PR 工作流（下游 Skill 改动回流模板主仓）
+
 ## 使用时机
 
 **所有模式的起点（Plan / Agent / Ask）：**
@@ -46,3 +49,6 @@
 - failure-recovery
 - fix-the-system-not-just-the-ticket
 - entropy-cleanup
+
+**向模板主仓回流经验时：**
+- skill-upstream-pr
