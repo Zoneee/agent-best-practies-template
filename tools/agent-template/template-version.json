@@ -1,0 +1,7 @@
+{
+  "_comment": "本文件记录当前项目同步自模板仓库的版本信息，由 sync-template.sh 自动维护，请勿手动编辑",
+  "templateRepo": "Zoneee/agent-best-practies-template",
+  "ref": "main",
+  "syncedAt": "2026-03-25T12:02:22Z",
+  "templateCommit": "8e61c287597d8462c4f1c7e2bf072ee2162b4280"
+}

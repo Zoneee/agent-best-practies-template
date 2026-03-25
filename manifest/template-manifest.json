@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "description": "agent-best-practies-template 同步清单，定义哪些内容可以同步到下游项目",
+  "templateRepo": "Zoneee/agent-best-practies-template",
+  "groups": [
+    {
+      "name": "core-skills",
+      "description": "Agent 行为手册（核心 Skills），强同步，不应被下游项目覆盖",
+      "source": "skills/",
+      "target": "skills/",
+      "mode": "hard-sync",
+      "enabled": true
+    },
+    {
+      "name": "templates",
+      "description": "可复用执行表单（Templates），强同步，不应被下游项目覆盖",
+      "source": "templates/",
+      "target": "templates/",
+      "mode": "hard-sync",
+      "enabled": true
+    },
+    {
+      "name": "docs-standards",
+      "description": "开发规范文档，弱同步，允许下游项目追加但同名文件会被覆盖",
+      "source": "docs/standards/",
+      "target": "docs/standards/",
+      "mode": "soft-sync",
+      "enabled": true
+    },
+    {
+      "name": "docs-references",
+      "description": "外部参考文档，弱同步，允许下游项目追加私有参考文档",
+      "source": "docs/references/",
+      "target": "docs/references/",
+      "mode": "soft-sync",
+      "enabled": true
+    }
+  ],
+  "overlayGroups": [
+    {
+      "name": "overlay-python",
+      "description": "Python 项目专用追加内容",
+      "source": "overlays/python-project/",
+      "target": ".",
+      "mode": "soft-sync",
+      "enabled": false
+    },
+    {
+      "name": "overlay-node",
+      "description": "Node.js 项目专用追加内容",
+      "source": "overlays/node-project/",
+      "target": ".",
+      "mode": "soft-sync",
+      "enabled": false
+    }
+  ],
+  "projectPrivate": {
+    "description": "以下路径不由本模板管理，由下游项目本地维护",
+    "paths": [
+      "AGENTS.md",
+      "ARCHITECTURE.md",
+      "README.md",
+      "DESIGN.md",
+      "PRODUCT_SENSE.md",
+      "QUALITY_SCORE.md",
+      "RELIABILITY.md",
+      "SECURITY.md",
+      "docs/architecture/",
+      "docs/exec-plans/",
+      "docs/runbooks/",
+      "docs/product-specs/",
+      "docs/design-docs/"
+    ]
+  }
+}
