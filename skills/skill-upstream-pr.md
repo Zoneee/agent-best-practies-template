@@ -72,15 +72,8 @@
 
 ## 生成产物
 
-使用 `propose-skill-upstream-pr.sh` 脚本（或手动整理）生成以下产物：
+使用 `propose-skill-upstream-pr.sh` 脚本（或手动整理）生成以下产物（默认 `--output-dir=./output/upstream-pr`，与脚本设计文档保持一致）：
 
-```text
-output/
-├── metadata.json              # 来源、版本、项目类型等元信息
-├── proposal.md                # 回流提案说明（符合 PR 模板格式）
-├── pr-body.md                 # 可直接用于发起 PR 的正文草稿
-└── patches/
-    └── skills/<skill-name>.md # 候选回流文件（已剥离项目专属内容）
 ```
 
 **注意**：生成产物不会自动创建跨仓库 PR。需由人工审阅后，通过正常 GitHub PR 流程向模板主仓发起。
