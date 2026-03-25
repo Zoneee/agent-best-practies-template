@@ -72,6 +72,20 @@ quality / cleanup（长期治理）
 6. 参考 `docs/` 中的相关文档实现
 7. 用 `templates/pr-template.md` 提交证据
 
+## 多项目复用与回流
+
+本模板支持多项目复用。下游项目可通过同步脚本（`tools/agent-template/sync-template.sh`）从本仓库拉取最新共性 Skills 和 Templates。
+
+当下游项目在实践中积累了经过验证的共性改进时，可通过"受控回流 PR 工作流"将其贡献回本仓库：
+
+1. 阅读 `skills/skill-upstream-pr.md`，了解回流判断流程
+2. 确认改动具有通用价值且已剥离项目专属内容
+3. 使用 `templates/upstream-skill-pr-template.md` 填写 PR 正文
+4. 参考 `tools/scripts/propose-skill-upstream-pr-design.md` 了解辅助脚本规范
+5. 向本仓库发起 Pull Request，等待维护者评审
+
+**注意：回流是受控的人工流程，不是自动反向同步。**
+
 ## 模式使用要求
 
 无论在哪种模式下，输出都应优先表达交付质量控制，而不是只强调修复内容。

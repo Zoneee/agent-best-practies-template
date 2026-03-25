@@ -9,6 +9,7 @@
 - `agent-first-principles.md`：Agent 优先原则
 - `ui-guidelines.md`：UI 交互规范
 - `tradeoff-log.md`：权衡决策日志
+- `upstream-pr-workflow.md`：下游 Skill 回流模板主仓工作流设计说明
 
 ## 用途
 设计文档记录持久性的产品与交互设计假设，为 Agent 和人类提供设计决策的背景与理由。
