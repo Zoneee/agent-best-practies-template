@@ -133,16 +133,12 @@ else
   REPO_URL="${TEMPLATE_REPO_URL:-https://github.com/${TEMPLATE_REPO}.git}"
   info "克隆模板仓库: ${REPO_URL} @ ${REF}"
 
-  if $DRY_RUN; then
-    log "[DRY-RUN] git clone ${REPO_URL} ${TEMPLATE_DIR} && git checkout ${REF}"
-  else
-    git clone "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
-      | sed 's/^/  /' \
-      || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
-    git -C "${TEMPLATE_DIR}" checkout "${REF}" 2>&1 \
-      | sed 's/^/  /' \
-      || err "切换到指定 ref 失败，请检查 ref 是否正确: ${REF}"
-  fi
+  git clone "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
+    | sed 's/^/  /' \
+    || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
+  git -C "${TEMPLATE_DIR}" checkout "${REF}" 2>&1 \
+    | sed 's/^/  /' \
+    || err "切换到指定 ref 失败，请检查 ref 是否正确: ${REF}"
 fi
 
 # ── 读取 manifest ─────────────────────────────────────────────────────────────
