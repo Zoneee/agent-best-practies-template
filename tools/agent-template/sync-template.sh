@@ -8,6 +8,8 @@
 #
 # 选项：
 #   --dry-run              仅预览将执行的操作，不实际写入文件
+#                          不会拉取远程模板；需预先准备本地模板目录，
+#                          并通过 --template-dir 指定
 #   --ref <ref>            指定模板仓库的 git ref（tag、branch 或 commit SHA）
 #                          默认使用 template-version.json 中记录的 ref，
 #                          若不存在则使用远程仓库 main 分支的最新版本
@@ -133,12 +135,16 @@ else
   REPO_URL="${TEMPLATE_REPO_URL:-https://github.com/${TEMPLATE_REPO}.git}"
   info "克隆模板仓库: ${REPO_URL} @ ${REF}"
 
-  git clone "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
-    | sed 's/^/  /' \
-    || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
-  git -C "${TEMPLATE_DIR}" checkout "${REF}" 2>&1 \
-    | sed 's/^/  /' \
-    || err "切换到指定 ref 失败，请检查 ref 是否正确: ${REF}"
+  if $DRY_RUN; then
+    log "[DRY-RUN] git clone ${REPO_URL} ${TEMPLATE_DIR} && git checkout ${REF}"
+  else
+    git clone "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
+      | sed 's/^/  /' \
+      || err "克隆模板仓库失败，请检查网络连接: ${REPO_URL}"
+    git -C "${TEMPLATE_DIR}" checkout "${REF}" 2>&1 \
+      | sed 's/^/  /' \
+      || err "切换到指定 ref 失败，请检查 ref 是否正确: ${REF}"
+  fi
 fi
 
 # ── 读取 manifest ─────────────────────────────────────────────────────────────

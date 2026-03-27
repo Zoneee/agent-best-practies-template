@@ -28,10 +28,12 @@ vi tools/agent-template/sync-template.config.json
 # 修改 projectName 等字段
 ```
 
-3. 预览同步内容：
+3. 预览同步内容（先准备本地模板目录）：
 
 ```bash
-./tools/agent-template/sync-template.sh --dry-run
+git clone https://github.com/Zoneee/agent-best-practies-template.git /tmp/agent-best-practies-template
+./tools/agent-template/sync-template.sh --dry-run \
+  --template-dir /tmp/agent-best-practies-template
 ```
 
 4. 执行同步：
@@ -46,8 +48,14 @@ vi tools/agent-template/sync-template.config.json
 # 同步全部 enabled group（默认行为）
 ./tools/agent-template/sync-template.sh
 
-# 预览不写入
-./tools/agent-template/sync-template.sh --dry-run
+# 预览不写入（需先准备本地模板目录）
+./tools/agent-template/sync-template.sh --dry-run \
+  --template-dir /path/to/agent-best-practies-template
+
+# 若 manifest 不在默认位置，可显式指定
+./tools/agent-template/sync-template.sh --dry-run \
+  --template-dir /path/to/agent-best-practies-template \
+  --manifest /path/to/template-manifest.json
 
 # 同步到特定版本（tag 或 branch）
 ./tools/agent-template/sync-template.sh --ref v1.0.0
@@ -72,6 +80,16 @@ vi tools/agent-template/sync-template.config.json
 - `git`：用于克隆模板仓库
 - `python3`：用于解析 JSON manifest（大多数系统内置）
 - `rsync`（可选）：如未安装则回退到 `cp`，但 hard-sync 的删除功能将不可用
+
+## `--dry-run` 前置材料
+
+`--dry-run` 的语义是**仅预览本次同步会做什么，不执行远程克隆，也不写入目标项目**。  
+因此在下游项目中使用 `--dry-run` 前，需要先准备：
+
+1. 一份本地可访问的模板目录副本（通过 `--template-dir` 指定）
+2. 若 manifest 不在默认位置，再额外提供 `--manifest`
+
+如果你希望脚本自动从远程仓库拉取模板，请直接运行不带 `--dry-run` 的同步命令。
 
 ## manifest 与 config 协作方式
 
