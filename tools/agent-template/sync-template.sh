@@ -8,8 +8,8 @@
 #
 # 选项：
 #   --dry-run              仅预览将执行的操作，不实际写入文件
-#                          不会拉取远程模板；需预先准备本地模板目录，
-#                          并通过 --template-dir 指定
+#                          若未指定 --template-dir，会在临时目录中拉取
+#                          生成预览所需的最小模板文件集
 #   --ref <ref>            指定模板仓库的 git ref（tag、branch 或 commit SHA）
 #                          默认使用 template-version.json 中记录的 ref，
 #                          若不存在则使用远程仓库 main 分支的最新版本
@@ -19,7 +19,7 @@
 #   --config <path>        指定本地配置文件路径
 #                          默认：tools/agent-template/sync-template.config.json
 #   --manifest <path>      指定 manifest 文件路径（优先于模板仓库中的 manifest）
-#   --template-dir <path>  使用本地目录作为模板源（跳过远程克隆，用于测试）
+#   --template-dir <path>  使用本地目录作为模板源（跳过临时拉取，用于测试/调试）
 #   --help                 显示帮助信息
 #
 # 依赖：git, rsync（若未安装 rsync 则回退到 cp；cp 模式下 exclude 不生效）
@@ -37,6 +37,7 @@ CONFIG_FILE="${SCRIPT_DIR}/sync-template.config.json"
 VERSION_FILE="${SCRIPT_DIR}/template-version.json"
 MANIFEST_OVERRIDE=""
 TEMPLATE_DIR_OVERRIDE=""
+AUTO_FETCHED_TEMPLATE=false
 
 # ── 参数解析 ─────────────────────────────────────────────────────────────────
 usage() {
@@ -133,10 +134,23 @@ if [[ -n "$TEMPLATE_DIR_OVERRIDE" ]]; then
   info "使用本地模板目录: ${TEMPLATE_DIR}"
 else
   REPO_URL="${TEMPLATE_REPO_URL:-https://github.com/${TEMPLATE_REPO}.git}"
-  info "克隆模板仓库: ${REPO_URL} @ ${REF}"
+  info "准备模板仓库: ${REPO_URL} @ ${REF}"
 
   if $DRY_RUN; then
-    log "[DRY-RUN] git clone ${REPO_URL} ${TEMPLATE_DIR} && git checkout ${REF}"
+    info "在临时目录中为 --dry-run 拉取最小模板文件集"
+    git clone --filter=blob:none --sparse --no-checkout "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
+      | sed 's/^/  /' \
+      || err "初始化 dry-run 模板仓库失败，请检查网络连接: ${REPO_URL}"
+    git -C "${TEMPLATE_DIR}" sparse-checkout init --cone 2>&1 \
+      | sed 's/^/  /' \
+      || err "初始化 sparse-checkout 失败"
+    git -C "${TEMPLATE_DIR}" sparse-checkout set manifest 2>&1 \
+      | sed 's/^/  /' \
+      || err "获取 manifest 所需文件失败"
+    git -C "${TEMPLATE_DIR}" checkout "${REF}" 2>&1 \
+      | sed 's/^/  /' \
+      || err "切换到指定 ref 失败，请检查 ref 是否正确: ${REF}"
+    AUTO_FETCHED_TEMPLATE=true
   else
     git clone "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
       | sed 's/^/  /' \
@@ -235,6 +249,27 @@ if [[ -z "$SYNC_TASKS" ]]; then
   warn "      或在 config 的 overlays 中列出要启用的 overlay；"
   warn "      或通过 --group 命令行参数手动指定。"
   exit 0
+fi
+
+if $DRY_RUN && $AUTO_FETCHED_TEMPLATE; then
+  declare -A _sparse_paths_seen=()
+  SPARSE_SOURCE_PATHS=()
+
+  while IFS='|' read -r _group_name _source_rel _target_rel _mode _exclude_csv; do
+    [[ -z "$_source_rel" ]] && continue
+    _source_rel="${_source_rel%/}"
+    if [[ -n "$_source_rel" ]] && [[ -z "${_sparse_paths_seen[$_source_rel]+x}" ]]; then
+      SPARSE_SOURCE_PATHS+=("$_source_rel")
+      _sparse_paths_seen["$_source_rel"]=1
+    fi
+  done <<< "$SYNC_TASKS"
+
+  if [[ ${#SPARSE_SOURCE_PATHS[@]} -gt 0 ]]; then
+    info "为 --dry-run 补充预览所需的模板路径到临时目录"
+    git -C "${TEMPLATE_DIR}" sparse-checkout set manifest "${SPARSE_SOURCE_PATHS[@]}" 2>&1 \
+      | sed 's/^/  /' \
+      || err "获取 dry-run 预览所需模板文件失败"
+  fi
 fi
 
 SYNC_COUNT=0

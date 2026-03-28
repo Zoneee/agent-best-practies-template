@@ -163,8 +163,8 @@ quality / cleanup（长期治理）
 2. 参考 `examples/simple-project/README.md` 了解同步后的目录结构
 3. 参考 `manifest/template-manifest.json` 了解哪些内容可同步
 4. 将 `tools/agent-template/` 复制到目标项目并配置 `sync-template.config.json`
-5. 若要使用 `--dry-run` 预览，先准备一份本地模板目录副本，并通过 `--template-dir` 传入
-6. 运行 `./tools/agent-template/sync-template.sh --dry-run --template-dir /path/to/agent-best-practies-template` 预览
+5. 运行 `./tools/agent-template/sync-template.sh --dry-run` 预览（脚本会在临时目录中自动拉取预览所需的最小模板文件集）
+6. 若你已有本地模板副本，也可通过 `--template-dir` 覆盖临时目录来源
 7. 运行 `./tools/agent-template/sync-template.sh` 执行同步
 
 详见 `tools/agent-template/README.md`。
