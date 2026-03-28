@@ -106,6 +106,56 @@ sync-template.sh  →  实际同步操作
 tools/agent-template/template-version.json  ←  自动记录本次同步的 ref 和时间戳
 ```
 
+## `manifest/template-manifest.json` 起什么作用
+
+可以把 `manifest/template-manifest.json` 理解为**模板同步清单**。  
+`sync-template.sh` 不会硬编码“要同步哪些目录”，而是先读取 manifest，再决定这次同步有哪些候选 group。
+
+manifest 主要定义：
+
+- `name`：group 名称，例如 `core-skills`、`templates`
+- `source`：模板仓库中的源路径
+- `target`：同步到下游项目的目标路径
+- `mode`：同步模式（`hard-sync` / `soft-sync`）
+- `enabled`：默认是否启用
+- `exclude`：同步时要排除的文件模式
+
+脚本随后会把 manifest 与下游项目自己的 `sync-template.config.json`、以及 CLI 参数（如 `--group`）合并起来，算出本次真正要执行的同步任务。
+
+换句话说：
+
+- **manifest 决定“有哪些内容可同步、默认怎么同步”**
+- **config 决定“下游项目要启用哪些 overlay / 覆盖哪些 group 配置”**
+- **CLI 参数决定“本次命令要不要进一步缩小范围或固定版本”**
+
+`--dry-run` 也依赖 manifest：脚本需要先拿到 manifest，才知道预览时需要补充哪些模板源路径。
+
+## 脚本如何确定要使用的模板版本
+
+`sync-template.sh` 使用模板版本（git ref）的优先级如下：
+
+1. **命令行 `--ref <ref>`**
+   - 优先级最高
+   - 适合显式指定某个 tag、branch 或 commit SHA
+2. **`tools/agent-template/template-version.json` 中记录的 `ref`**
+   - 如果本地没有显式传 `--ref`，脚本会读取这个文件
+   - 这通常表示“当前项目上一次同步时使用的模板版本”
+3. **默认回退到 `main`**
+   - 当前两者都没有时，脚本会使用模板仓库的 `main`
+
+这意味着：
+
+- 第一次同步时，通常会落到默认 `main`
+- 后续再次运行脚本时，若不显式传 `--ref`，会优先沿用 `template-version.json` 中记住的版本
+- 如果你想升级/回退到某个特定模板版本，应显式传 `--ref`
+
+在非 dry-run 的实际同步完成后，脚本会更新 `tools/agent-template/template-version.json`，记录本次使用的：
+
+- `ref`
+- `syncedAt`
+- `templateRepo`
+- `templateCommit`（如果可获取）
+
 ## AGENTS.md 说明
 
 `AGENTS.md` 属于项目私有内容，**不由本工具同步**。  

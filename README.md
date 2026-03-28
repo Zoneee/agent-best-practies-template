@@ -99,6 +99,15 @@ tools/agent-template/template-version.json  ← 自动维护
   记录：已同步的 ref、提交 SHA、时间戳
 ```
 
+补充说明：
+
+- `manifest/template-manifest.json` 是同步流程的**任务清单**，决定“有哪些内容可以同步、默认同步到哪里、用什么模式同步”。
+- `sync-template.sh` 不直接把目录写死在脚本里，而是读取 manifest，再结合下游项目的 `sync-template.config.json` 和命令行参数，得出本次真正要执行的同步任务。
+- 模板版本（ref）的选择优先级是：
+  1. CLI 显式传入的 `--ref`
+  2. `tools/agent-template/template-version.json` 中记录的上次同步 `ref`
+  3. 默认回退到模板仓库 `main`
+
 ### 哪些内容适合强同步、弱同步、项目私有维护？
 
 | 内容 | 同步模式 | 理由 |
