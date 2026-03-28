@@ -252,10 +252,11 @@ if [[ -z "$SYNC_TASKS" ]]; then
 fi
 
 if $DRY_RUN && $AUTO_FETCHED_TEMPLATE; then
+  # 用关联数组模拟 set，避免对同一路径重复执行 sparse-checkout。
   declare -A SPARSE_PATHS_SEEN=()
   SPARSE_SOURCE_PATHS=()
 
-  while IFS='|' read -r _unused_group_name _source_rel _target_rel _mode _exclude_csv; do
+  while IFS='|' read -r _group_name _source_rel _target_rel _mode _exclude_csv; do
     [[ -z "$_source_rel" ]] && continue
     _source_rel="${_source_rel%/}"
     if [[ -z "${SPARSE_PATHS_SEEN[$_source_rel]+x}" ]]; then
