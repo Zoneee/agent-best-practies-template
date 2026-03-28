@@ -65,7 +65,7 @@ cp -r agent-best-practies-template/tools/agent-template your-project/tools/
 cd your-project
 vi tools/agent-template/sync-template.config.json
 
-# 4. 执行首次同步（--dry-run 先预览）
+# 4. 执行首次同步（--dry-run 先预览；脚本会在临时目录中准备预览所需的模板文件）
 ./tools/agent-template/sync-template.sh --dry-run
 
 # 5. 确认无误后执行实际同步

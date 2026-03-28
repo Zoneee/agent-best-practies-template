@@ -46,8 +46,16 @@ vi tools/agent-template/sync-template.config.json
 # 同步全部 enabled group（默认行为）
 ./tools/agent-template/sync-template.sh
 
-# 预览不写入
+# 预览不写入（默认会在临时目录中获取预览所需的模板文件）
 ./tools/agent-template/sync-template.sh --dry-run
+
+# 若你已有本地模板副本，也可显式指定
+./tools/agent-template/sync-template.sh --dry-run \
+  --template-dir /path/to/agent-best-practies-template
+
+# 若 manifest 不在默认位置，可显式指定
+./tools/agent-template/sync-template.sh --dry-run \
+  --manifest /path/to/template-manifest.json
 
 # 同步到特定版本（tag 或 branch）
 ./tools/agent-template/sync-template.sh --ref v1.0.0
@@ -73,6 +81,19 @@ vi tools/agent-template/sync-template.config.json
 - `python3`：用于解析 JSON manifest（大多数系统内置）
 - `rsync`（可选）：如未安装则回退到 `cp`，但 hard-sync 的删除功能将不可用
 
+## `--dry-run` 需要哪些资料
+
+`--dry-run` 的语义仍然是**仅预览本次同步会做什么，不写入目标项目**。  
+为了生成这个预览，脚本至少需要两类资料：
+
+1. `manifest`：用来判断哪些 group 会参与同步，以及它们的源路径/目标路径
+2. 被选中 group 对应的模板源路径：用来列出这次预览会涉及哪些文件
+
+默认情况下，脚本会在**临时目录**中自动拉取这部分预览所需的最小模板文件集，而不是要求用户先准备整个模板仓库。
+
+如果你已经有本地模板副本，或想调试某个未提交版本，也可以继续通过 `--template-dir` 显式指定本地模板目录。  
+如果 manifest 不在默认位置，则再额外传入 `--manifest`。
+
 ## manifest 与 config 协作方式
 
 ```text
@@ -84,6 +105,83 @@ sync-template.sh  →  实际同步操作
         ↓
 tools/agent-template/template-version.json  ←  自动记录本次同步的 ref 和时间戳
 ```
+
+## `manifest/template-manifest.json` 起什么作用
+
+可以把 `manifest/template-manifest.json` 理解为**模板同步清单**。  
+`sync-template.sh` 不会硬编码“要同步哪些目录”，而是先读取 manifest，再决定这次同步有哪些候选 group。
+
+manifest 主要定义：
+
+- `name`：group 名称，例如 `core-skills`、`templates`
+- `source`：模板仓库中的源路径
+- `target`：同步到下游项目的目标路径
+- `mode`：同步模式（`hard-sync` / `soft-sync`）
+- `enabled`：默认是否启用
+- `exclude`：同步时要排除的文件模式
+
+脚本随后会把 manifest 与下游项目自己的 `sync-template.config.json`、以及 CLI 参数（如 `--group`）合并起来，算出本次真正要执行的同步任务。
+
+换句话说：
+
+- **manifest 决定“有哪些内容可同步、默认怎么同步”**
+- **config 决定“下游项目要启用哪些 overlay / 覆盖哪些 group 配置”**
+- **CLI 参数决定“本次命令要不要进一步缩小范围或固定版本”**
+
+`--dry-run` 也依赖 manifest：脚本需要先拿到 manifest，才知道预览时需要补充哪些模板源路径。
+
+### manifest 里的 `version` 是什么
+
+`manifest/template-manifest.json` 顶层的 `"version": "1.0.0"` 表示的是 **manifest 自身的版本号**，可以理解为这份同步清单/结构约定的版本。
+
+它**不是**：
+
+- 模板仓库的 branch 名
+- 模板仓库的 tag 名
+- `sync-template.sh` 用来选择同步来源的 ref
+
+当前 `sync-template.sh` 不会读取 manifest 里的 `version` 字段来决定同步哪个模板版本；脚本真正使用的是 git ref。
+
+## 脚本如何确定要使用的模板版本
+
+`sync-template.sh` 使用模板版本（git ref）的优先级如下：
+
+1. **命令行 `--ref <ref>`**
+   - 优先级最高
+   - 适合显式指定某个 tag、branch 或 commit SHA
+2. **`tools/agent-template/template-version.json` 中记录的 `ref`**
+   - 如果本地没有显式传 `--ref`，脚本会读取这个文件
+   - 这通常表示“当前项目上一次同步时使用的模板版本”
+3. **默认回退到 `main`**
+   - 当前两者都没有时，脚本会使用模板仓库的 `main`
+
+这意味着：
+
+- 第一次同步时，通常会落到默认 `main`
+- 后续再次运行脚本时，若不显式传 `--ref`，会优先沿用 `template-version.json` 中记住的版本
+- 如果你想升级/回退到某个特定模板版本，应显式传 `--ref`
+
+在非 dry-run 的实际同步完成后，脚本会更新 `tools/agent-template/template-version.json`，记录本次使用的：
+
+- `ref`
+- `syncedAt`
+- `templateRepo`
+- `templateCommit`（如果可获取）
+
+### 如果使用 tag，是否要求命名格式
+
+脚本层面：**没有强制格式要求**。  
+只要是 git 能识别的合法 ref，`--ref` 都可以接受，例如：
+
+- branch：`main`
+- tag：`v0.1.0`
+- commit SHA：`8e61c287597d8462c4f1c7e2bf072ee2162b4280`
+
+仓库约定层面：本仓库的发布说明写明**遵循 Semantic Versioning**，当前示例 tag 采用 `vMAJOR.MINOR.PATCH` 形式，例如 `v0.1.0`。  
+因此：
+
+- **脚本不校验 tag 命名格式**
+- **仓库发布约定推荐使用 `v0.1.0` 这类 SemVer tag**
 
 ## AGENTS.md 说明
 

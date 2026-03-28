@@ -99,6 +99,17 @@ tools/agent-template/template-version.json  ← 自动维护
   记录：已同步的 ref、提交 SHA、时间戳
 ```
 
+补充说明：
+
+- `manifest/template-manifest.json` 是同步流程的**任务清单**，决定“有哪些内容可以同步、默认同步到哪里、用什么模式同步”。
+- manifest 顶层的 `version` 表示的是 **manifest/同步清单自身的版本**，不是模板仓库的 branch/tag，也不是脚本选用的同步 ref。
+- `sync-template.sh` 不直接把目录写死在脚本里，而是读取 manifest，再结合下游项目的 `sync-template.config.json` 和命令行参数，得出本次真正要执行的同步任务。
+- 模板版本（ref）的选择优先级是：
+  1. CLI 显式传入的 `--ref`
+  2. `tools/agent-template/template-version.json` 中记录的上次同步 `ref`
+  3. 默认回退到模板仓库 `main`
+- 若使用 tag 作为 `--ref`，脚本不强制校验命名格式；但仓库发布约定遵循 Semantic Versioning，示例采用 `v0.1.0` 形式。
+
 ### 哪些内容适合强同步、弱同步、项目私有维护？
 
 | 内容 | 同步模式 | 理由 |
@@ -163,8 +174,9 @@ quality / cleanup（长期治理）
 2. 参考 `examples/simple-project/README.md` 了解同步后的目录结构
 3. 参考 `manifest/template-manifest.json` 了解哪些内容可同步
 4. 将 `tools/agent-template/` 复制到目标项目并配置 `sync-template.config.json`
-5. 运行 `./tools/agent-template/sync-template.sh --dry-run` 预览
-6. 运行 `./tools/agent-template/sync-template.sh` 执行同步
+5. 运行 `./tools/agent-template/sync-template.sh --dry-run` 预览（脚本会在临时目录中自动拉取预览所需的最小模板文件集）
+6. 若你已有本地模板副本，也可通过 `--template-dir` 覆盖临时目录来源
+7. 运行 `./tools/agent-template/sync-template.sh` 执行同步
 
 详见 `tools/agent-template/README.md`。
 
