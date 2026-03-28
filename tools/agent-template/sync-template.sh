@@ -140,7 +140,7 @@ else
     info "在临时目录中为 --dry-run 拉取最小模板文件集"
     git clone --filter=blob:none --sparse --no-checkout "${REPO_URL}" "${TEMPLATE_DIR}" 2>&1 \
       | sed 's/^/  /' \
-      || err "初始化 dry-run 模板仓库失败，请检查仓库地址、访问权限、磁盘空间或网络连接: ${REPO_URL}"
+      || err "初始化 dry-run 模板仓库失败，请检查仓库地址、访问权限或网络连接: ${REPO_URL}"
     git -C "${TEMPLATE_DIR}" sparse-checkout init --cone 2>&1 \
       | sed 's/^/  /' \
       || err "初始化 sparse-checkout 失败"
@@ -252,15 +252,15 @@ if [[ -z "$SYNC_TASKS" ]]; then
 fi
 
 if $DRY_RUN && $AUTO_FETCHED_TEMPLATE; then
-  declare -A _sparse_paths_seen=()
+  declare -A SPARSE_PATHS_SEEN=()
   SPARSE_SOURCE_PATHS=()
 
-  while IFS='|' read -r _group_name _source_rel _target_rel _mode _exclude_csv; do
+  while IFS='|' read -r _unused_group_name _source_rel _target_rel _mode _exclude_csv; do
     [[ -z "$_source_rel" ]] && continue
     _source_rel="${_source_rel%/}"
-    if [[ -z "${_sparse_paths_seen[$_source_rel]+x}" ]]; then
+    if [[ -z "${SPARSE_PATHS_SEEN[$_source_rel]+x}" ]]; then
       SPARSE_SOURCE_PATHS+=("$_source_rel")
-      _sparse_paths_seen["$_source_rel"]=1
+      SPARSE_PATHS_SEEN["$_source_rel"]=1
     fi
   done <<< "$SYNC_TASKS"
 
