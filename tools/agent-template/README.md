@@ -130,6 +130,18 @@ manifest 主要定义：
 
 `--dry-run` 也依赖 manifest：脚本需要先拿到 manifest，才知道预览时需要补充哪些模板源路径。
 
+### manifest 里的 `version` 是什么
+
+`manifest/template-manifest.json` 顶层的 `"version": "1.0.0"` 表示的是 **manifest 自身的版本号**，可以理解为这份同步清单/结构约定的版本。
+
+它**不是**：
+
+- 模板仓库的 branch 名
+- 模板仓库的 tag 名
+- `sync-template.sh` 用来选择同步来源的 ref
+
+当前 `sync-template.sh` 不会读取 manifest 里的 `version` 字段来决定同步哪个模板版本；脚本真正使用的是 git ref。
+
 ## 脚本如何确定要使用的模板版本
 
 `sync-template.sh` 使用模板版本（git ref）的优先级如下：
@@ -155,6 +167,21 @@ manifest 主要定义：
 - `syncedAt`
 - `templateRepo`
 - `templateCommit`（如果可获取）
+
+### 如果使用 tag，是否要求命名格式
+
+脚本层面：**没有强制格式要求**。  
+只要是 git 能识别的合法 ref，`--ref` 都可以接受，例如：
+
+- branch：`main`
+- tag：`v0.1.0`
+- commit SHA：`8e61c287597d8462c4f1c7e2bf072ee2162b4280`
+
+仓库约定层面：本仓库的发布说明写明**遵循 Semantic Versioning**，当前示例 tag 采用 `vMAJOR.MINOR.PATCH` 形式，例如 `v0.1.0`。  
+因此：
+
+- **脚本不校验 tag 命名格式**
+- **仓库发布约定推荐使用 `v0.1.0` 这类 SemVer tag**
 
 ## AGENTS.md 说明
 
