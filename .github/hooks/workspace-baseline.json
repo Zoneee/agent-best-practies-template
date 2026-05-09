@@ -1,0 +1,28 @@
+{
+    "hooks": {
+        "PreToolUse": [
+            {
+                "type": "command",
+                "command": "python3 .github/hooks/scripts/pre_tool_use_baseline.py",
+                "windows": "py -3 .github\\hooks\\scripts\\pre_tool_use_baseline.py",
+                "timeout": 10
+            }
+        ],
+        "PostToolUse": [
+            {
+                "type": "command",
+                "command": "python3 .github/hooks/scripts/post_tool_use_baseline.py",
+                "windows": "py -3 .github\\hooks\\scripts\\post_tool_use_baseline.py",
+                "timeout": 15
+            }
+        ],
+        "Stop": [
+            {
+                "type": "command",
+                "command": "python3 .github/hooks/scripts/stop_baseline.py",
+                "windows": "py -3 .github\\hooks\\scripts\\stop_baseline.py",
+                "timeout": 5
+            }
+        ]
+    }
+}

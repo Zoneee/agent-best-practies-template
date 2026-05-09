@@ -2,7 +2,7 @@
 
 状态：有效
 负责人：工程团队
-最后评审：（填写日期）
+最后评审：2026-05-09
 
 ## 规范列表
 - `coding-rules.md`：编码规则
@@ -14,3 +14,4 @@
 - `file-size-limits.md`：文件大小限制
 - `security.md`：安全规范
 - `reliability.md`：可靠性规范
+- `workspace-hooks.md`：workspace hooks 默认门禁基线

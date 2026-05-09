@@ -1,5 +1,9 @@
 # 执行计划
 
+状态：有效
+负责人：工程团队
+最后评审：2026-05-09
+
 ## 用途
 执行计划跟踪过大或过重要、不能仅留存于提示词中的当前、已完成和延期工作。
 
@@ -7,6 +11,13 @@
 - `active/`：当前执行计划
 - `completed/`：已完成计划
 - `tech-debt-tracker.md`：技术债跟踪
+
+## 文件命名规范
+- `active/` 与 `completed/` 下的执行计划文件使用 `YYYY-MM-DD-<topic>.md`。
+- `YYYY-MM-DD` 表示计划创建或立项日期，`<topic>` 使用简短、可读的 kebab-case 主题名。
+- 示例：`2026-05-07-template-governance-upgrade.md`
+- 该规则只适用于执行计划文件，不适用于技术债跟踪器。
+- `tech-debt-tracker.md` 中的技术债条目继续使用独立编号，例如 `TD-001`、`TD-002`。
 
 ## 适用场景
 - 多步骤功能
@@ -21,3 +32,29 @@
 2. 更新进展与决策
 3. 完成后移动至 `completed/`
 4. 必要时链接后续跟进事项
+5. 归档后仍保留日期前缀文件名，便于按时间排序和追踪
+
+## 执行交接契约
+- 仅当执行将跨多轮对话、启用 Autopilot、或需要显式的 slice gate / stop condition 时，才在 `docs/exec-plans/active/` 中补充 `YYYY-MM-DD_handoff_{topic}.md` 交接契约。
+- 单轮执行或 `plan-light` 默认不创建 handoff contract；优先在源执行计划内保持单一事实来源。
+- 交接契约可通过 repo-local 的 `.github/prompts/handoff.prompt.md` 生成或刷新，以降低多轮执行前的手工切换成本。
+- 交接契约使用 `templates/plan-execute-handoff-contract-template.md`，属于执行计划的配套产物，不属于执行计划文件命名规范本身。
+- 交接契约是源执行计划的执行投影，不替代计划；完整交付目标、风险、回滚与长期决策仍以源执行计划为准。
+- 交接契约中的 stop condition 应显式区分为两类：优先由 hooks 机械化执行的门禁，以及仍需人工判断后停止回报的条件。
+- 对于当前 slice 可直接观察和判定的门禁，优先写入 `PreToolUse`、`PostToolUse`、`Stop` 这三类 hook 映射；不要把本可机械化的门禁只写成抽象提醒。
+- 默认 hooks 落点基线见 `docs/standards/workspace-hooks.md`；handoff contract 若无特殊需求，应从该基线裁剪并按 slice 加严，而不是每次重写一套新的分配逻辑。
+- 若执行范围、顺序、验证门禁或 stop condition 变化，先更新交接契约；若变化已影响计划目标或边界，先更新源执行计划，再同步更新交接契约。
+
+## 计划更新纪律
+- 何时更新：阶段开始、阶段完成、出现阻塞、发生关键决策、完成验证时。
+- 只更新 5 处：
+	- `## 状态`：整体当前态。
+	- `## 阶段完成度概览`：每个阶段一句话当前态。
+	- `## 进展日志`：追加新事实和验证结果。
+	- `## 决策日志`：追加影响后续执行的决策。
+	- `## 后续事项`：保留当前剩余动作。
+- `plan-light` 可把 `## 阶段完成度概览` 写成当前切片概览，不强行拆成多个 Phase；`full-governance` 再按阶段维护。
+- 若任务包含长周期观察、迁移验证或兼容性试点，原始观察记录应放在独立记录中；active 计划内只回写稳定结论、关键证据与剩余动作。可使用 `templates/observation-record-template.md` 记录 observation card。
+- observation card 推荐放在 `docs/exec-plans/active/observations/` 这类独立目录中，并在对应 active 计划的 `进展日志` 或 `后续事项` 中回写文件路径与压缩结论。
+- 不要重写 `## 实现步骤`，不要在多个位置重复写同一状态链，不要把计划改成流水账。
+- 保留原计划为基线；推进时只追加“做完了什么、验证了什么、还剩什么”。

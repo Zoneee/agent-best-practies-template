@@ -1,5 +1,7 @@
 # Skills 索引
 
+本页只负责按场景导航 Skills。默认启动顺序、必读 Skills 和加载规则以 `AGENTS.md` 为准。
+
 ## 核心 Skills
 - delivery-quality-first.md：交付质量优先（所有模式的默认起点）
 - plan-before-code.md：先计划，后编码
@@ -22,27 +24,9 @@
 ## 维护类 Skills
 - entropy-cleanup.md：熵值清理
 
-## 使用时机
+## 按场景加载提示
 
-**所有模式的起点（Plan / Agent / Ask）：**
-- delivery-quality-first
-- repo-as-source-of-truth
-
-**编码前 / 计划前：**
-- plan-before-code
-- codebase-navigation
-
-**编码中：**
-- boundary-validation
-- refactor-with-constraints
-- docs-update-required
-
-**提交前：**
-- self-review-loop
-- evidence-driven-delivery
-- small-safe-prs
-
-**被阻塞或质量漂移时：**
-- failure-recovery
-- fix-the-system-not-just-the-ticket
-- entropy-cleanup
+- 制定计划、梳理范围或定义证据时：`delivery-quality-first`、`plan-before-code`、`repo-as-source-of-truth`
+- 实现与改动控制时：`boundary-validation`、`refactor-with-constraints`、`docs-update-required`、`codebase-navigation`
+- 提交前自查时：`self-review-loop`、`evidence-driven-delivery`、`small-safe-prs`
+- 被阻塞、任务反复失败或质量漂移时：`failure-recovery`、`fix-the-system-not-just-the-ticket`、`entropy-cleanup`
