@@ -37,8 +37,8 @@ plan-light | full-governance
 - 先写最能证伪当前方案的验证，再补充其他检查。
 
 ## 证据记录方式
-- 若需长周期观察、迁移验证或兼容性试点，先使用 `templates/observation-record-template.md` 记录原始 observation card；本计划只摘要稳定结论与关键证据入口。
-- observation card 默认放在 `docs/exec-plans/active/observations/` 或与当前计划关联的独立观察目录中，并在本计划的 `进展日志` 中引用。
+- 若需长周期观察、迁移验证或兼容性试点，先在与当前计划关联的独立记录中保存原始 observation card；本计划只摘要稳定结论与关键证据入口。
+- observation card 放在便于与当前计划互相回链的位置，并在本计划的 `进展日志` 中引用。
 - 若执行将跨多轮对话、启用 Autopilot 或需要显式的 stop condition，可通过 `.github/prompts/handoff.prompt.md` 或另建 `YYYY-MM-DD_handoff_{topic}.md` 交接契约；该契约只负责执行投影，不替代本计划作为完整真相源。
 - `plan-light` 可把证据入口收敛到本计划、PR 或一次 focused validation；只有确实需要跨轮追踪时再扩展为 observation card 或独立 handoff。
 

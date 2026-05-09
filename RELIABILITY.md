@@ -17,5 +17,4 @@
 ## 详细来源
 参见：
 - `docs/standards/reliability.md`
-- `docs/runbooks/incident-response.md`
-- `docs/runbooks/rollback.md`
+- 当前任务对应的执行计划与验证证据

@@ -14,8 +14,8 @@ Use this prompt to turn a stable execution plan into a handoff contract before m
 - Start from [AGENTS.md](../../AGENTS.md).
 - Treat repository documents as the source of truth.
 - When an active execution plan exists, follow the update discipline in [docs/exec-plans/index.md](../../docs/exec-plans/index.md).
-- Use the structure in [templates/plan-execute-handoff-contract-template.md](../../templates/plan-execute-handoff-contract-template.md).
-- Seed hook mappings from [docs/standards/workspace-hooks.md](../../docs/standards/workspace-hooks.md) unless the source plan needs stricter slice-specific gates.
+- Build the handoff contract directly from the source execution plan; do not depend on a separate handoff template.
+- If hooks or workspace baselines are unavailable, express validation gates and stop conditions directly in the handoff result instead of pointing to missing infrastructure.
 
 ## Workflow
 
@@ -25,9 +25,9 @@ Use this prompt to turn a stable execution plan into a handoff contract before m
    - `Full-plan autopilot`
    - `Selected slices`
    - `Verification only`
-4. Produce the handoff result using the template structure as an execution projection.
+4. Produce the handoff result as a compact execution projection of the source plan.
 5. Keep the source plan as the full truth source for goals, risks, rollback, and long-term decisions; use the handoff contract only for execution range, slice order, validation gates, and stop conditions.
-6. For each slice, fill `### Hook 门禁映射`, start from [docs/standards/workspace-hooks.md](../../docs/standards/workspace-hooks.md), and only add stricter slice-specific rules when the source plan requires them.
+6. For each slice, make the execution gates explicit. If hook mappings are still available in the repo, include them; otherwise write the blocking validation and stop conditions directly in the slice.
 7. Split global stop conditions into two classes:
    - hook-mechanizable conditions that should be enforced by hooks when possible
    - human-judgment conditions that should stop and report back instead of guessing
@@ -51,7 +51,8 @@ Use this prompt to turn a stable execution plan into a handoff contract before m
 - Missing source execution plan blocks all downstream execution.
 - If the source plan still lacks stable scope, validation baseline, or sequencing, set `## 就绪判定` to `Blocked on contract update` or `Not ready` and route back to planning.
 - Missing `## 范围`, `## 非范围`, or `## 约束与禁止` blocks autonomous execution.
-- Missing per-slice validation, missing `### Hook 门禁映射`, or missing either class of global stop condition blocks Autopilot launch.
+- Missing per-slice validation or missing either class of global stop condition blocks Autopilot launch.
+- If the repo no longer has working hooks or hook baselines, lack of hook mappings alone must not block the handoff; the validation and stop logic still has to be written explicitly.
 - If the current user request conflicts with the source plan, return to planning before producing a “ready” handoff artifact.
 
 ## Output behavior

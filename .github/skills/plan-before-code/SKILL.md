@@ -28,7 +28,8 @@ Typical prompts that should trigger this skill include:
 2. Identify the affected modules, files, and constraints.
 3. Define acceptance criteria and the focused validation path.
 4. Record risks, rollback notes, and unknowns.
-5. For larger work, create or update an execution plan instead of keeping the plan only in chat.
+5. If a clarification artifact is already plan-ready, continue directly into plan creation instead of leaving `create plan` as an unexecuted recommendation.
+6. For larger work, create or update an execution plan instead of keeping the plan only in chat.
 
 ## Output shape
 
@@ -43,4 +44,4 @@ Typical prompts that should trigger this skill include:
 
 - Keep [AGENTS.md](../../../AGENTS.md) as the default workflow entrypoint.
 - When an active execution plan exists, update only the allowed tracking sections described in [docs/exec-plans/index.md](../../../docs/exec-plans/index.md).
-- This spike is a native-skill bridge for the existing workflow described in [skills/plan-before-code.md](../../../skills/plan-before-code.md).
+- This is the repository-native planning skill for the current GitHub skills layout.

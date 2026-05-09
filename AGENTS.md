@@ -21,15 +21,13 @@
 
 ## 默认阅读顺序
 1. 先读取根目录 `AGENTS.md`，建立通用规则、完成定义与 Skills 加载规则。
-2. 若任务已有执行计划，进入 `docs/exec-plans/active/` 中对应计划；否则从 `docs/index.md` 进入相关主题文档。
-3. 按任务主题继续阅读相关架构、产品规格、开发规范和运行手册索引。
-4. 仅在任务需要时进入 `skills/`，具体加载规则见下文。
+2. 若任务已有执行计划，进入 `docs/exec-plans/active/` 中对应计划；否则从 `docs/index.md` 进入当前仍保留的主题文档。
+3. 按任务主题继续阅读当前仍保留的开发规范、设计日志、执行计划与必要的 Skills。
+4. 仅在任务需要时进入 `.github/skills/`，具体加载规则见下文。
 5. 开始实现前确认范围、验证方式与证据来源已经明确。
 
 ## 按需参考
-- `skills/index.md`：按场景查找 Skills 目录，不替代默认阅读顺序。
-- `ARCHITECTURE.md`、`DESIGN.md`、`PRODUCT_SENSE.md`、`RELIABILITY.md`、`SECURITY.md`：根目录主题速查，不属于默认起始阅读链路。
-- `QUALITY_SCORE.md`：仓库健康度与治理状态参考，仅在需要评估全局状态或后续治理优先级时查看。
+- `ARCHITECTURE.md`、`RELIABILITY.md`：根目录主题速查，不属于默认起始阅读链路。
 
 ## Skills 使用与加载规则
 1. 完成默认阅读顺序后，Agent 必须按本节规则确定 Skills 装载范围，并将所采用的 Skills 视为默认执行上下文的一部分。
@@ -39,7 +37,7 @@
 5. 若用户显式指定某个 Skills 文件，Agent 必须优先采用该 Skills，并在不冲突时继续遵守 `AGENTS.md` 中的其余通用约束。
 6. 若用户请求与当前自动选择的 Skills 不一致，Agent 必须明确说明最终采用了哪些 Skills，以及哪些是因为用户显式指定而被优先采用。
 7. 在输出计划、开始实现或给出结论前，Agent 应先自检本次任务所需读取的 Skills 是否已经覆盖；不得在未读取相关 Skills 的情况下直接开始高风险或高歧义工作。
-8. `skills/delivery-quality-first.md` 是所有模式（Plan / Agent / Ask）的默认优先 Skill，每次任务开始时应首先参考。
+8. `delivery-quality-first` 是所有模式（Plan / Agent / Ask）的默认优先 Skill，每次任务开始时应首先参考。
 
 ## 核心工作流
 1. 仔细阅读任务。
@@ -52,25 +50,24 @@
 8. 若被阻塞，先改善文档、工具或约束。
 
 ## 模板与阶段路由
-1. 进入实现前，先用澄清契约收敛需求；通用 intake 统一使用 `templates/clarification-contract-template.md`，不再使用独立的任务模板。
-2. 若任务类型是 `feature` 且仍需要补齐产品级细节，下一阶段转入 `templates/feature-spec-template.md`；若任务类型是 `bug` 且仍需要补齐复现、环境或影响信息，下一阶段转入 `templates/bug-report-template.md`。
-3. 当澄清结果的 `下一步动作` 为 `create plan`，或任务本身属于多步骤、高风险、跨多个区域的工作时，使用 `templates/plan-template.md` 创建或更新执行计划。
-4. 当执行将跨多轮对话、启用 Autopilot、或需要显式的 stop condition 与验证门禁时，在稳定计划之后通过 `.github/prompts/handoff.prompt.md` 或 `templates/plan-execute-handoff-contract-template.md` 补充执行交接契约。
+1. 进入实现前，先用澄清契约收敛需求；通用 intake 统一通过 `.github/prompts/clarify.prompt.md` 生成，不再依赖独立澄清模板文件。
+2. 若任务类型是 `feature` 或 `bug` 且仍需要补齐细节，优先在澄清契约的追加区块中保留必要事实；只有确实需要独立下游产物时，再在同目录新增简短补充文档并从澄清契约回链。
+3. 当澄清结果的 `下一步动作` 为 `create plan`，或任务本身属于多步骤、高风险、跨多个区域的工作时，应在同一轮创建或更新 `templates/plan-template.md` 对应的执行计划，而不是只停留在下一步推荐；仅当用户明确要求 chat-only 澄清结果时例外。
+4. 当执行将跨多轮对话、启用 Autopilot、或需要显式的 stop condition 与验证门禁时，在稳定计划之后通过 `.github/prompts/handoff.prompt.md` 补充执行交接契约。
 5. `plan-execute-handoff-contract` 只是执行投影，不替代完整计划；若目标、边界或风险发生变化，先更新源执行计划，再同步更新 handoff contract。
 
 ## 必读 Skills
-- `skills/delivery-quality-first.md`
-- `skills/plan-before-code.md`
-- `skills/repo-as-source-of-truth.md`
-- `skills/evidence-driven-delivery.md`
-- `skills/small-safe-prs.md`
+- `delivery-quality-first`
+- `plan-before-code`
+- `repo-as-source-of-truth`
+- `evidence-driven-delivery`
 
 ## 按场景选读 Skills
-- API / 解析 / 外部输入：`skills/boundary-validation.md`
-- 任务反复失败：`skills/fix-the-system-not-just-the-ticket.md`
-- 调试类生产问题：`skills/observability-first-debugging.md`
-- 大范围重构：`skills/refactor-with-constraints.md`
-- 质量漂移：`skills/entropy-cleanup.md`
+- API / 解析 / 外部输入：`boundary-validation`
+- 执行反复失败或陷入循环：`failure-recovery`
+- 任务反复失败：`fix-the-system-not-just-the-ticket`
+- 调试类生产问题：`observability-first-debugging`
+- 大范围重构：`refactor-with-constraints`
 
 ## 完成定义
 满足以下全部条件，工作才算完成：

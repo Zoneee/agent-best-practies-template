@@ -15,6 +15,5 @@
 
 ## 详细来源
 参见：
-- `docs/architecture/index.md`
-- `docs/architecture/layering.md`
-- `docs/architecture/dependency-rules.md`
+- `docs/standards/coding-rules.md`
+- 当前任务对应的执行计划与代码锚点
