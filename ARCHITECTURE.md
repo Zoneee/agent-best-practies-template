@@ -15,5 +15,6 @@
 
 ## 详细来源
 参见：
-- `docs/standards/coding-rules.md`
+- `AGENTS.md`
+- `.github/skills/delivery-quality-first/SKILL.md`
 - 当前任务对应的执行计划与代码锚点

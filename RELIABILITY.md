@@ -16,5 +16,6 @@
 
 ## 详细来源
 参见：
-- `docs/standards/reliability.md`
+- `AGENTS.md`
+- `.github/skills/delivery-quality-first/SKILL.md`
 - 当前任务对应的执行计划与验证证据
